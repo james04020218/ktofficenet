@@ -3,12 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KT Office Net</title>
-    <link rel="stylesheet" href="style.css">
+    <title>KT 인터넷 상품 AI 컨설턴트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with a professional blue accent. -->
+    <!-- Application Structure Plan: The application maintains its "guided selling" quiz but enhances it with a new, powerful feature: an AI-powered free-text analysis section. This creates a two-tiered approach. Tier 1 is the quick quiz for users who prefer simple choices. Tier 2 is the Gemini-powered "AI Consulting" for users with more complex needs who want a detailed, personalized analysis based on their own description. A new "IP Address Explained" tab is added to the details section to provide foundational knowledge, making the overall tool more educational. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: Price differences. -> Goal: Compare. -> Viz: Grouped Bar Chart (Chart.js). -> Interaction: Hover. -> Justification: Retained for quick visual cost comparison.
+        2. Report Info: Key feature differences. -> Goal: Organize & Compare. -> Viz: Interactive Accordion Table (HTML/CSS/JS). -> Interaction: Click to expand. -> Justification: Retained for structured, detailed feature comparison.
+        3. Report Info: Customer profiles/personas. -> Goal: Inform & Relate. -> Viz: Interactive Cards (HTML/CSS/JS). -> Interaction: Click. -> Justification: Retained to provide relatable, common examples.
+        4. Report Info: User's free-text description of their needs. -> Goal: Analyze & Recommend. -> Viz: Text Input + AI-Generated Structured JSON Output (Gemini API), rendered as clean UI cards. -> Interaction: User types, clicks, gets a visually structured recommendation. -> Justification: Offers a hyper-personalized recommendation using a robust, clean, and visually appealing card-based UI.
+        5. NEW - IP Address Explanation. -> Goal: Inform & Educate. -> Viz: Visually distinct info cards with analogies (HTML/CSS). -> Interaction: None, focus on clarity. -> Justification: Integrates the provided IP explanation guide directly into the app, using clear visual metaphors (food court vs. home address) to explain a complex topic, enhancing user understanding before they make a choice.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .tab-button.active { border-color: #2563eb; color: #2563eb; font-weight: 700; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .persona-card.active { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 50vh; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body>
-    <!-- 여기에 내용을 추가하세요 -->
-    
-    <script src="script.js"></script>
+<body class="bg-gray-50 text-gray-800">
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">KT 인터넷, 어떤 상품이 맞을까요?</h1>
+            <p class="mt-4 text-lg text-gray-600">간단한 질문 또는 AI 컨설팅으로 나에게 꼭 맞는 상품을 찾아보세요.</p>
+        </header>
+
+        <section id="advisor-quiz" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mb-12">
+            <div id="quiz-step-1">
+                <h3 class="text-2xl font-bold mb-2 text-center">질문 1/3</h3>
+                <p class="text-lg text-gray-700 mb-6 text-center">주로 어디에서 사용하시나요?</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="selectAnswer(1, 'home')" class="w-full text-left p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200">
+                        <span class="text-4xl">🏠</span>
+                        <h4 class="text-xl font-bold mt-2">가정</h4>
+                        <p class="text-gray-500 mt-1">OTT 시청, 게임, 재택근무 등</p>
+                    </button>
+                    <button onclick="selectAnswer(1, 'office')" class="w-full text-left p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200">
+                         <span class="text-4xl">🏢</span>
+                        <h4 class="text-xl font-bold mt-2">사무실/매장</h4>
+                        <p class="text-gray-500 mt-1">다수 직원 근무, 고객용 WiFi 등</p>
+                    </button>
+                </div>
+            </div>
+
+            <div id="quiz-step-2" class="hidden">
+                <h3 class="text-2xl font-bold mb-2 text-center">질문 2/3</h3>
+                <p class="text-lg text-gray-700 mb-6 text-center">동시에 연결할 컴퓨터(PC/노트북)는 몇 대인가요?</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="selectAnswer(2, '1-2')" class="w-full text-left p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200">
+                        <span class="text-4xl">💻</span>
+                        <h4 class="text-xl font-bold mt-2">1~2대</h4>
+                        <p class="text-gray-500 mt-1">개인, 소규모 사용 환경</p>
+                    </button>
+                    <button onclick="selectAnswer(2, '3+')" class="w-full text-left p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200">
+                        <span class="text-4xl">🖥️🖥️</span>
+                        <h4 class="text-xl font-bold mt-2">3대 이상</h4>
+                        <p class="text-gray-500 mt-1">다수 인원이 사용하는 사무 환경</p>
+                    </button>
+                </div>
+            </div>
+
+            <div id="quiz-step-3" class="hidden">
+                <h3 class="text-2xl font-bold mb-2 text-center">질문 3/3</h3>
+                <p class="text-lg text-gray-700 mb-6 text-center">서버 운영이나 원격 접속(VPN)이 필요한가요?</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="selectAnswer(3, 'no')" class="w-full text-left p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200">
+                        <span class="text-4xl">❌</span>
+                        <h4 class="text-xl font-bold mt-2">아니오</h4>
+                        <p class="text-gray-500 mt-1">필요 없거나 잘 모르겠어요.</p>
+                    </button>
+                    <button onclick="selectAnswer(3, 'yes')" class="w-full text-left p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200">
+                        <span class="text-4xl">🌐</span>
+                        <h4 class="text-xl font-bold mt-2">예</h4>
+                        <p class="text-gray-500 mt-1">자체 서버, 원격 근무 등이 필요해요.</p>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="recommendation-section" class="hidden max-w-4xl mx-auto text-center mb-16">
+            <div id="recommendation-result" class="bg-white p-8 rounded-2xl shadow-xl border-2 fade-in"></div>
+        </section>
+        
+        <section id="details-section" class="bg-white p-6 sm:p-8 md:p-12 rounded-2xl shadow-lg border border-gray-100 mb-12">
+            <h2 class="text-3xl font-bold text-center mb-2">더 알아보기</h2>
+            <p class="text-center text-gray-600 mb-8">상품별 차이점과 고객 유형, IP 주소의 개념까지 자세히 확인해보세요.</p>
+            
+            <div class="border-b border-gray-200 mb-8">
+                <nav class="-mb-px flex justify-center space-x-2 sm:space-x-8" aria-label="Tabs">
+                    <button onclick="switchTab('comparison')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors active">한눈에 비교</button>
+                    <button onclick="switchTab('ip-guide')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">IP 주소란?</button>
+                    <button onclick="switchTab('personas')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">유형별 추천</button>
+                    <button onclick="switchTab('chart')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">요금 비교</button>
+                </nav>
+            </div>
+
+            <div id="comparison-content" class="content-section active fade-in">
+                <p class="text-center text-gray-600 mb-6">각 항목을 클릭하면 상세 설명을 보실 수 있습니다.</p>
+                <div class="divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="grid grid-cols-3 bg-gray-50 font-bold text-gray-700">
+                        <div class="p-4">핵심 기능</div>
+                        <div class="p-4 text-center">🏠 가정용 인터넷</div>
+                        <div class="p-4 text-center">🏢 오피스넷</div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-header grid grid-cols-3 w-full text-left items-center hover:bg-gray-50 transition">
+                            <div class="p-4 font-semibold text-gray-800">PC 연결 대수</div>
+                            <div class="p-4 text-center text-red-600 font-bold">최대 2대</div>
+                            <div class="p-4 text-center text-green-600 font-bold">무제한</div>
+                        </button>
+                        <div class="accordion-content"><div class="p-6 bg-gray-50 text-gray-700 border-t"><strong>가정용:</strong> 약관상 2대의 PC만 허용됩니다. 3대 이상 연결 시 추가 요금(부가서비스)이 필요하거나 접속이 제한될 수 있습니다. 이는 저렴한 가정용 요금제를 사무 환경에서 사용하는 것을 막기 위한 정책입니다.<br><strong>오피스넷:</strong> PC 연결 대수에 제한이 없어 3명 이상의 직원이 근무하는 모든 사무 환경에 적합합니다.</div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-header grid grid-cols-3 w-full text-left items-center hover:bg-gray-50 transition">
+                            <div class="p-4 font-semibold text-gray-800">IP 주소</div>
+                            <div class="p-4 text-center">유동 IP</div>
+                            <div class="p-4 text-center">유동 IP / <span class="text-blue-600 font-semibold">고정 IP</span></div>
+                        </button>
+                         <div class="accordion-content"><div class="p-6 bg-gray-50 text-gray-700 border-t"><strong>가정용:</strong> 접속 시마다 IP 주소가 바뀔 수 있는 유동 IP만 제공합니다. 일반적인 웹서핑, 게임에는 문제가 없습니다.<br><strong>오피스넷:</strong> 유동 IP를 기본으로 하지만, 유료 부가서비스를 통해 항상 동일한 주소를 유지하는 고정 IP를 할당받을 수 있습니다. 이는 서버 운영, 원격 접속(VPN), 전문 CCTV 운영 등에 필수적입니다.</div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-header grid grid-cols-3 w-full text-left items-center hover:bg-gray-50 transition">
+                            <div class="p-4 font-semibold text-gray-800">서비스 안정성</div>
+                            <div class="p-4 text-center">최선 노력형</div>
+                            <div class="p-4 text-center"><span class="text-blue-600 font-semibold">SLA 계약 보증</span></div>
+                        </button>
+                        <div class="accordion-content"><div class="p-6 bg-gray-50 text-gray-700 border-t"><strong>가정용:</strong> 최상의 서비스 품질을 위해 노력하지만, 최저 속도나 장애 복구 시간을 법적으로 보장하지는 않습니다.<br><strong>오피스넷:</strong> 서비스 수준 보장(SLA) 계약을 통해 최저 보장 속도, 장애 처리 시간 등을 명시적으로 약속합니다. 기준 미달 시 요금 감면 등 보상을 받을 수 있어 비즈니스 연속성에 매우 중요합니다.</div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-header grid grid-cols-3 w-full text-left items-center hover:bg-gray-50 transition">
+                            <div class="p-4 font-semibold text-gray-800">주요 결합 상품</div>
+                            <div class="p-4 text-center">모바일, TV</div>
+                            <div class="p-4 text-center">사업장 전화, POS, CCTV</div>
+                        </button>
+                         <div class="accordion-content"><div class="p-6 bg-gray-50 text-gray-700 border-t"><strong>가정용:</strong> 가족의 휴대폰 요금과 결합하여 통신비 전체를 크게 할인받는 '총액결합할인'이 핵심입니다.<br><strong>오피스넷:</strong> 카드 결제기, 사업장 전화, 지능형 CCTV 등 비즈니스 운영에 필요한 솔루션을 묶어 할인해주는 '소호 성공팩' 등이 있습니다.</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="ip-guide-content" class="content-section">
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-bold text-gray-900">IP 주소, 인터넷 세상의 '주소'와 같아요!</h3>
+                    <p class="mt-2 text-gray-600">어떤 주소가 고객님께 맞을지, 쉬운 비유로 설명해 드릴게요.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <h4 class="text-2xl font-bold text-blue-800 mb-3">🍽️ 유동 IP</h4>
+                        <p class="font-semibold text-lg mb-2">매일 바뀌는 '푸드코트 좌석'</p>
+                        <p class="text-gray-700">인터넷에 접속할 때마다 통신사가 비어있는 주소를 임시로 부여해요. 외부에서 나를 찾아올 필요 없이, 웹서핑, 유튜브 시청, 게임 등 정보를 '찾아보기만' 하는 대부분의 가정 환경에 적합합니다.</p>
+                        <div class="mt-4 bg-white p-3 rounded-md text-sm font-semibold text-blue-700">장점: 추가 비용 없이 기본 제공되어 경제적</div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <h4 class="text-2xl font-bold text-green-800 mb-3">🏠 고정 IP</h4>
+                        <p class="font-semibold text-lg mb-2">언제나 그 자리, '우리 집 주소'</p>
+                        <p class="text-gray-700">항상 똑같은 주소를 유지해요. 외부에서 내 컴퓨터나 장비로 접속해야 하는 비즈니스 환경에 필수적입니다. (예: 원격 근무, CCTV 확인, 홈페이지 서버 운영)</p>
+                        <div class="mt-4 bg-white p-3 rounded-md text-sm font-semibold text-green-700">장점: 안정성과 신뢰성으로 비즈니스 보장</div>
+                    </div>
+                </div>
+                <div class="mt-10 bg-yellow-50 border-t-4 border-yellow-400 rounded-b-lg p-6">
+                     <h4 class="font-bold text-xl mb-4 text-gray-900">💡 "이것만 확인하세요!" 고정 IP가 꼭 필요한 경우</h4>
+                     <div class="space-y-3">
+                        <p class="flex items-start"><span class="text-yellow-600 font-bold mr-2">Q1.</span> 외부(집, 출장지)에서 가게나 사무실의 컴퓨터/장비로 접속해야 하나요?</p>
+                        <p class="flex items-start"><span class="text-yellow-600 font-bold mr-2">Q2.</span> 직원들이 집에서 회사처럼 원격으로 근무해야 하는 경우가 있나요?</p>
+                        <p class="flex items-start"><span class="text-yellow-600 font-bold mr-2">Q3.</span> 회사 홈페이지나 쇼핑몰 서버를 직접 운영하실 계획인가요?</p>
+                     </div>
+                     <p class="mt-4 font-semibold text-gray-800">위 질문 중 하나라도 '예'라면, 고객님께는 '고정 IP'가 반드시 필요합니다.</p>
+                </div>
+            </div>
+
+            <div id="personas-content" class="content-section"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
+            <div id="chart-content" class="content-section">
+                <div class="chart-container"><canvas id="priceChart"></canvas></div>
+                <p class="text-center text-gray-500 mt-4 text-sm">※ 3년 약정, 부가세 포함 기준 월 요금이며 결합 할인 등 실제 조건에 따라 변동될 수 있습니다.</p>
+            </div>
+        </section>
+
+        <section id="ai-advisor-section" class="max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-2xl shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-900">✨ AI 인터넷 컨설팅</h2>
+            <p class="text-center text-gray-600 mb-6">복잡한 상황은 AI에게 맡겨보세요. 사용 환경을 자유롭게 설명해주시면 AI가 분석하여 최적의 상품을 추천해 드립니다.</p>
+            <textarea id="ai-prompt-input" class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200" rows="5" placeholder="예시) 저는 집에서 유튜브 방송을 하는 크리에이터입니다. 아내는 재택근무를 하고, 아이는 닌텐도 게임을 해요. 컴퓨터는 총 3대이고, 안정적인 업로드 속도가 중요합니다."></textarea>
+            <button onclick="getAiRecommendation()" class="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                <span>✨ AI 컨설팅 받기</span>
+            </button>
+            <div id="ai-result-container" class="mt-6 hidden">
+                <div id="ai-loader" class="hidden"><div class="loader"></div><p class="text-center text-gray-600">AI 컨설턴트가 분석 중입니다. 잠시만 기다려주세요...</p></div>
+                <div id="ai-result" class="bg-white p-6 rounded-lg border border-gray-200"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const quizAnswers = {};
+        const personasData = [
+            { emoji: '👨‍👩‍👧‍👦', title: '일반 가정', profile: '1~4인 가구. OTT 시청, 웹 서핑, 온라인 학습, 가벼운 게임이 주된 목적. 사용하는 PC는 1~2대.', recommendation: '🏠 가정용 인터넷', reason: '2대 PC 연결 제한이 문제 되지 않고, 모바일/TV 결합 시 가장 저렴합니다. 500Mbps(베이직) 상품이 쾌적한 환경을 제공합니다.', color: 'bg-blue-100' },
+            { emoji: '🎬', title: '콘텐츠 크리에이터', profile: '유튜버, 스트리머, 디자이너. 고사양 PC 2대 이상 사용, 대용량 파일 업로드가 잦아 업로드 속도가 매우 중요함.', recommendation: '🏠 가정용(대칭형) or 🏢 오피스넷', reason: '비용이 중요하다면 대칭형(FTTH)이 보장되는 가정용 1Gbps 상품이 최적입니다. 단, PC 3대 이상 사용 또는 안정성이 더 중요하다면 오피스넷이 필수입니다.', color: 'bg-purple-100' },
+            { emoji: '☕', title: '소호(SOHO) 사업자', profile: '카페, 식당, 소매점 등. 카드결제기(POS), 고객용 WiFi, CCTV, 관리용 PC 등 2대 이상의 단말 연결이 필요함.', recommendation: '🏢 오피스넷', reason: '다양한 기기 연결과 안정적인 고객 와이파이 제공을 위해 PC 연결 제한이 없는 오피스넷이 필수입니다. ‘소호 성공팩’이 경제적일 수 있습니다.', color: 'bg-green-100' },
+            { emoji: '💼', title: '중소기업 사무실', profile: '3~50명 근무. 전 직원 PC 사용, 네트워크 프린터, 파일 서버(NAS) 등 업무 연속성이 매우 중요.', recommendation: '🏢 오피스넷', reason: '3대 이상의 PC를 사용하므로 약관상 오피스넷이 유일한 선택지입니다. 인터넷 장애는 곧 업무 손실이므로 SLA 보증이 중요합니다.', color: 'bg-yellow-100' },
+            { emoji: '🏥', title: '전문 분야 기업', profile: '병원, IT 기업, 설계사무소. 자체 서버, 원격접속(VPN), 대용량 데이터 전송 등 고정 IP가 필수적인 경우가 많음.', recommendation: '🏢 오피스넷 (고정 IP 포함)', reason: '고정 IP는 유동 IP 환경에서는 불가능한 핵심 비즈니스 운영을 가능하게 합니다. 안정성이 최우선이므로 GiGA Office 등 상위 서비스를 고려할 수 있습니다.', color: 'bg-red-100' }
+        ];
+        const priceData = {
+            labels: ['슬림 (100M)', '베이직 (500M)', '에센스 (1G)'],
+            datasets: [
+                { label: '🏠 가정용', data: [22000, 33000, 38500], backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 },
+                { label: '🏢 오피스넷', data: [30800, 44000, 49500], backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1 }
+            ]
+        };
+
+        function selectAnswer(step, answer) {
+            quizAnswers[step] = answer;
+            const currentStep = document.getElementById(`quiz-step-${step}`);
+            const nextStep = document.getElementById(`quiz-step-${step + 1}`);
+            currentStep.classList.add('hidden');
+            if (nextStep) {
+                nextStep.classList.remove('hidden');
+                nextStep.classList.add('fade-in');
+            } else {
+                showRecommendation();
+            }
+        }
+
+        function showRecommendation() {
+            const recommendationSection = document.getElementById('recommendation-section');
+            const resultDiv = document.getElementById('recommendation-result');
+            let recommendationHTML = '';
+            const use = quizAnswers[1];
+            const pcs = quizAnswers[2];
+            const server = quizAnswers[3];
+
+            if (use === 'office' || pcs === '3+' || server === 'yes') {
+                recommendationHTML = `<h2 class="text-3xl font-bold text-gray-900 mb-2">고객님께는 <span class="text-green-600">🏢 오피스넷</span>을 추천합니다.</h2><p class="text-lg text-gray-600 mb-4">선택하신 내용을 바탕으로 분석한 결과입니다.</p><div class="text-left max-w-md mx-auto space-y-2">${pcs === '3+' ? '<p>✔️ <strong>3대 이상의 PC</strong>를 연결하시므로, 연결 제한이 없는 오피스넷이 필수입니다.</p>' : ''}${server === 'yes' ? '<p>✔️ <strong>서버 운영/원격 접속</strong>을 위해 고정 IP 제공이 가능한 오피스넷이 필요합니다.</p>' : ''}${(use === 'office' && pcs !== '3+' && server !== 'yes') ? '<p>✔️ <strong>사무실/매장 환경</strong>에서는 안정적인 서비스 품질 보증(SLA)이 중요합니다.</p>' : ''}</div><p class="mt-6 text-gray-500">오피스넷은 기업 환경의 안정성과 생산성을 위한 최적의 선택입니다.</p>`;
+            } else {
+                recommendationHTML = `<h2 class="text-3xl font-bold text-gray-900 mb-2">고객님께는 <span class="text-blue-600">🏠 가정용 인터넷</span>을 추천합니다.</h2><p class="text-lg text-gray-600 mb-4">선택하신 내용을 바탕으로 분석한 결과입니다.</p><div class="text-left max-w-md mx-auto space-y-2"><p>✔️ <strong>2대 이하의 PC</strong>를 사용하시고, <strong>고정 IP가 필요 없는</strong> 환경입니다.</p><p>✔️ 모바일/TV와 결합 시 <strong>가장 저렴한 요금</strong>으로 이용할 수 있습니다.</p></div><p class="mt-6 text-gray-500">가정용 인터넷은 합리적인 가격으로 쾌적한 인터넷 환경을 제공합니다.</p>`;
+            }
+            resultDiv.innerHTML = recommendationHTML;
+            recommendationSection.classList.remove('hidden');
+            recommendationSection.classList.add('fade-in');
+            recommendationSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(`${tabName}-content`).classList.add('active', 'fade-in');
+        }
+
+        function populatePersonas() {
+            const container = document.querySelector('#personas-content .grid');
+            let personasHTML = '';
+            personasData.forEach(persona => {
+                personasHTML += `<div class="persona-card bg-white border rounded-xl p-6 transition duration-300 hover:shadow-lg hover:border-blue-300 cursor-pointer"><div class="flex items-center space-x-4"><div class="text-4xl p-3 rounded-full ${persona.color}">${persona.emoji}</div><h3 class="text-xl font-bold text-gray-800">${persona.title}</h3></div><div class="mt-4"><p class="text-gray-600 mb-4">${persona.profile}</p><div class="bg-gray-100 p-4 rounded-lg"><p class="font-semibold text-gray-800">${persona.recommendation}</p><p class="text-sm text-gray-600 mt-1">${persona.reason}</p></div></div></div>`;
+            });
+            container.innerHTML = personasHTML;
+        }
+
+        async function getAiRecommendation() {
+            const userInput = document.getElementById('ai-prompt-input').value;
+            const resultContainer = document.getElementById('ai-result-container');
+            const loader = document.getElementById('ai-loader');
+            const resultDiv = document.getElementById('ai-result');
+
+            if (!userInput.trim()) {
+                resultDiv.innerHTML = '<p class="text-red-500 font-semibold">분석할 내용을 입력해주세요.</p>';
+                resultContainer.classList.remove('hidden');
+                return;
+            }
+
+            resultContainer.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+
+            const prompt = `당신은 KT의 전문 인터넷 상품 컨설턴트입니다. 고객이 설명하는 인터넷 사용 환경을 분석하여 '가정용 인터넷' 또는 '오피스넷' 중 더 적합한 상품을 추천하고, 그 이유를 명확하게 설명해야 합니다.
+
+            **주요 분석 기준:**
+            - **PC 대수:** 3대 이상 언급 시 '오피스넷' 강력 추천.
+            - **사업적 사용:** 사무실, 매장, 서버 운영, 고객용 와이파이 등 사업적 목적이 명확하면 '오피스넷' 추천.
+            - **업로드/안정성:** 개인 방송, 스트리밍, 대용량 파일 전송 등 업로드 속도와 안정성이 중요하다면, PC가 2대 이하여도 '오피스넷'을 고려할 수 있음을 언급. PC가 3대 이상이면 '오피스넷' 필수.
+            - **고정 IP:** 서버, VPN, 원격 접속 등이 언급되면 '오피스넷(고정 IP)' 추천.
+            - **단순 사용:** 웹서핑, OTT 시청 등 일반적인 가정 환경이면 비용 효율적인 '가정용 인터넷' 추천.
+
+            **고객 사용 환경:**
+            "${userInput}"`;
+
+            const jsonSchema = {
+                type: "OBJECT",
+                properties: {
+                    "product": { "type": "STRING", "description": "추천 상품명. '가정용 인터넷' 또는 '오피스넷' 중 하나."},
+                    "summary": { "type": "STRING", "description": "고객의 상황을 요약하고 추천의 핵심 근거를 한 문장으로 제시."},
+                    "reasons": {
+                        "type": "ARRAY",
+                        "description": "추천하는 구체적인 이유 2~3가지.",
+                        "items": { "type": "STRING" }
+                    }
+                },
+                required: ["product", "summary", "reasons"]
+            };
+
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: jsonSchema
+                    }
+                };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
+                    const { product, summary, reasons } = parsedJson;
+                    
+                    const isOffice = product === '오피스넷';
+                    const icon = isOffice ? '🏢' : '🏠';
+                    const colorClass = isOffice ? 'text-green-600' : 'text-blue-600';
+
+                    let reasonsHtml = reasons.map(reason => `
+                        <div class="flex items-start space-x-3">
+                            <span class="text-green-500 mt-1">✔️</span>
+                            <p class="text-gray-700">${reason}</p>
+                        </div>
+                    `).join('');
+
+                    const htmlOutput = `
+                        <div class="text-center mb-4">
+                            <p class="text-gray-600 mb-2">AI 컨설턴트 분석 결과</p>
+                            <h3 class="text-2xl font-bold ${colorClass}">${icon} ${product}</h3>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center mb-6">
+                            <p class="text-gray-800 font-medium">${summary}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-3 text-gray-800">상세 추천 근거</h4>
+                            <div class="space-y-3">
+                                ${reasonsHtml}
+                            </div>
+                        </div>
+                    `;
+                    resultDiv.innerHTML = htmlOutput;
+
+                } else {
+                    throw new Error("Invalid response structure from API.");
+                }
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                resultDiv.innerHTML = '<p class="text-red-500 font-semibold">AI 컨설팅 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+            } finally {
+                loader.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populatePersonas();
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: priceData,
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: '가정용 vs 오피스넷 월 요금 비교 (3년 약정)', font: { size: 18 } },
+                        tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += new Intl.NumberFormat('ko-KR').format(context.parsed.y) + '원'; } return label; } } }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { callback: function(value, index, ticks) { return new Intl.NumberFormat('ko-KR').format(value) + '원'; } } } }
+                }
+            });
+            document.querySelectorAll('.accordion-header').forEach(button => {
+                button.addEventListener('click', () => {
+                    const accordionContent = button.nextElementSibling;
+                    const isExpanded = accordionContent.style.maxHeight && accordionContent.style.maxHeight !== '0px';
+                    document.querySelectorAll('.accordion-content').forEach(content => content.style.maxHeight = '0px');
+                    if (!isExpanded) { accordionContent.style.maxHeight = accordionContent.scrollHeight + "px"; }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
