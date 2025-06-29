@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KT 인터넷 상품 AI 컨설턴트</title>
+    <title>KT 인터넷 상품 및 솔루션 컨설턴트</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals with a professional blue accent. -->
-    <!-- Application Structure Plan: The application maintains its "guided selling" quiz but enhances it with a new, powerful feature: an AI-powered free-text analysis section. This creates a two-tiered approach. Tier 1 is the quick quiz for users who prefer simple choices. Tier 2 is the Gemini-powered "AI Consulting" for users with more complex needs who want a detailed, personalized analysis based on their own description. A new "IP Address Explained" tab is added to the details section to provide foundational knowledge, making the overall tool more educational. -->
+    <!-- Application Structure Plan: The application structure is expanded to include a comprehensive "Solution Products" guide. The top-level remains a dual-path entry: a simple quiz or an advanced AI consultation. The "Learn More" section is now a richer knowledge base, containing not just product comparisons but also a detailed, visually-driven guide to value-added business solutions (Hai-Order, GiGAeyes, etc.). This transforms the app from a simple product selector into a holistic business solutions portal. -->
     <!-- Visualization & Content Choices: 
         1. Report Info: Price differences. -> Goal: Compare. -> Viz: Grouped Bar Chart (Chart.js). -> Interaction: Hover. -> Justification: Retained for quick visual cost comparison.
         2. Report Info: Key feature differences. -> Goal: Organize & Compare. -> Viz: Interactive Accordion Table (HTML/CSS/JS). -> Interaction: Click to expand. -> Justification: Retained for structured, detailed feature comparison.
-        3. Report Info: Customer profiles/personas. -> Goal: Inform & Relate. -> Viz: Interactive Cards (HTML/CSS/JS). -> Interaction: Click. -> Justification: Retained to provide relatable, common examples.
-        4. Report Info: User's free-text description of their needs. -> Goal: Analyze & Recommend. -> Viz: Text Input + AI-Generated Structured JSON Output (Gemini API), rendered as clean UI cards. -> Interaction: User types, clicks, gets a visually structured recommendation. -> Justification: Offers a hyper-personalized recommendation using a robust, clean, and visually appealing card-based UI.
-        5. NEW - IP Address Explanation. -> Goal: Inform & Educate. -> Viz: Visually distinct info cards with analogies (HTML/CSS). -> Interaction: None, focus on clarity. -> Justification: Integrates the provided IP explanation guide directly into the app, using clear visual metaphors (food court vs. home address) to explain a complex topic, enhancing user understanding before they make a choice.
+        3. Report Info: IP Address Explanation. -> Goal: Educate. -> Viz: Analogy-based info cards (HTML/CSS). -> Interaction: None. -> Justification: Retained to explain a complex topic simply.
+        4. Report Info: User's free-text description. -> Goal: Analyze & Recommend. -> Viz: AI-Generated Structured JSON rendered as UI cards. -> Interaction: Type and click. -> Justification: Retained for hyper-personalized recommendations.
+        5. NEW - OfficeNet Solution Products Guide. -> Goal: Inform & Explain. -> Viz: A series of detailed, icon-enhanced feature cards. -> Interaction: None, focus on clear information hierarchy. -> Justification: Translates the provided sales guide into customer-facing content. Each solution is presented in a structured card with clear sections for target audience, features, and benefits, making complex business solutions easy to understand.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -106,14 +106,13 @@
         
         <section id="details-section" class="bg-white p-6 sm:p-8 md:p-12 rounded-2xl shadow-lg border border-gray-100 mb-12">
             <h2 class="text-3xl font-bold text-center mb-2">더 알아보기</h2>
-            <p class="text-center text-gray-600 mb-8">상품별 차이점과 고객 유형, IP 주소의 개념까지 자세히 확인해보세요.</p>
+            <p class="text-center text-gray-600 mb-8">상품별 차이점과 고객 유형, 다양한 비즈니스 솔루션까지 확인해보세요.</p>
             
             <div class="border-b border-gray-200 mb-8">
-                <nav class="-mb-px flex justify-center space-x-2 sm:space-x-8" aria-label="Tabs">
-                    <button onclick="switchTab('comparison')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors active">한눈에 비교</button>
+                <nav class="-mb-px flex flex-wrap justify-center gap-x-4 sm:gap-x-8" aria-label="Tabs">
+                    <button onclick="switchTab('comparison')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors active">기본 상품 비교</button>
+                    <button onclick="switchTab('solutions')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">솔루션 상품</button>
                     <button onclick="switchTab('ip-guide')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">IP 주소란?</button>
-                    <button onclick="switchTab('personas')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">유형별 추천</button>
-                    <button onclick="switchTab('chart')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">요금 비교</button>
                 </nav>
             </div>
 
@@ -155,7 +154,147 @@
                             <div class="p-4 text-center">모바일, TV</div>
                             <div class="p-4 text-center">사업장 전화, POS, CCTV</div>
                         </button>
-                         <div class="accordion-content"><div class="p-6 bg-gray-50 text-gray-700 border-t"><strong>가정용:</strong> 가족의 휴대폰 요금과 결합하여 통신비 전체를 크게 할인받는 '총액결합할인'이 핵심입니다.<br><strong>오피스넷:</strong> 카드 결제기, 사업장 전화, 지능형 CCTV 등 비즈니스 운영에 필요한 솔루션을 묶어 할인해주는 '소호 성공팩' 등이 있습니다.</div></div>
+                         <div class="accordion-content"><div class="p-6 bg-gray-50 text-gray-700 border-t"><strong>가정용:</strong> 가족의 휴대폰 요금과 결합하여 통신비 전체를 크게 할인받는 '총액결합할인'이 핵심입니다.<br><strong>오피스넷:</strong> 카드 결제기, 사업장 전화, 지능형 CCTV 등 비즈니스 운영에 필요한 솔루션을 묶어 할인해주는 '성공팩' 등이 있습니다.</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="solutions-content" class="content-section">
+                <div class="space-y-12">
+                    <!-- 하이오더 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="text-6xl text-center md:text-left">📱</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900">하이오더 (테이블 오더 솔루션)</h3>
+                                <p class="mt-1 text-lg text-orange-500 font-semibold">"주문은 저희에게 맡기시고, 고객 케어에만 집중하세요!"</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid md:grid-cols-3 gap-6 text-center">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🎯 대상 고객</h4>
+                                <p class="text-sm text-gray-600 mt-1">음식점, 주점, 카페 등</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">✨ 기대 효과</h4>
+                                <p class="text-sm text-gray-600 mt-1">인건비 절감, 주문 누락 방지, 운영 효율 UP</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🔧 핵심 기능</h4>
+                                <p class="text-sm text-gray-600 mt-1">고객 직접 주문/결제, POS 연동, 실시간 관리</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-gray-800">💡 <span class="font-bold">핵심 포인트:</span> 바쁜 시간에도 주문 실수 없이 매장을 효율적으로 운영하고, 구인난 속 인건비를 절감할 수 있습니다. KT의 든든한 A/S는 기본입니다.</p>
+                        </div>
+                    </div>
+                    <!-- 기가아이즈 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="text-6xl text-center md:text-left">👁️</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900">기가아이즈 (지능형 영상보안)</h3>
+                                <p class="mt-1 text-lg text-blue-500 font-semibold">"사장님의 사업장을 지켜주는 똑똑한 눈, 기가아이즈입니다."</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid md:grid-cols-3 gap-6 text-center">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🎯 대상 고객</h4>
+                                <p class="text-sm text-gray-600 mt-1">보안/고객 분석이 필요한 모든 사업장</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">✨ 기대 효과</h4>
+                                <p class="text-sm text-gray-600 mt-1">강력한 보안, 스마트한 매장 관리, 영상 유실 방지</p>
+                            </div>
+                             <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🔧 핵심 기능</h4>
+                                <p class="text-sm text-gray-600 mt-1">AI 영상 분석, 클라우드 저장, 스마트폰 확인</p>
+                            </div>
+                        </div>
+                         <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-gray-800">💡 <span class="font-bold">핵심 포인트:</span> 단순 CCTV가 아닌, 침입 감지 알림과 고객 동선 분석 등 마케팅 데이터까지 제공하는 AI 보안 솔루션입니다. 영상은 KT 클라우드에 안전하게 보관됩니다.</p>
+                        </div>
+                    </div>
+                    <!-- 매니지드 서버 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="text-6xl text-center md:text-left">🗄️</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900">매니지드 서버 (관리 대행)</h3>
+                                <p class="mt-1 text-lg text-gray-600 font-semibold">"복잡한 서버 관리는 전문가에게 맡기고 사업에만 전념하세요!"</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid md:grid-cols-3 gap-6 text-center">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🎯 대상 고객</h4>
+                                <p class="text-sm text-gray-600 mt-1">IT 관리 인력이 부족한 중소기업, 스타트업</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">✨ 기대 효과</h4>
+                                <p class="text-sm text-gray-600 mt-1">초기 비용 절감, IT 관리 걱정 해소, 비즈니스 안정성 확보</p>
+                            </div>
+                             <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🔧 핵심 기능</h4>
+                                <p class="text-sm text-gray-600 mt-1">서버/장비 임대, 24시간 모니터링, 전문가 장애 대응</p>
+                            </div>
+                        </div>
+                         <div class="mt-6 bg-gray-100 border-l-4 border-gray-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-gray-800">💡 <span class="font-bold">핵심 포인트:</span> IT 전문가 채용 없이 월 이용료만으로 안정적인 서버와 네트워크를 운영할 수 있습니다. 초기 구축부터 장애 처리까지 KT가 모두 책임집니다.</p>
+                        </div>
+                    </div>
+                    <!-- 세무로 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="text-6xl text-center md:text-left">🧾</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900">세무로 (회계/세무 관리)</h3>
+                                <p class="mt-1 text-lg text-teal-500 font-semibold">"복잡한 세무, 회계 업무! 이제 '세무로'로 쉽고 간편하게 해결하세요."</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid md:grid-cols-3 gap-6 text-center">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🎯 대상 고객</h4>
+                                <p class="text-sm text-gray-600 mt-1">직접 세무를 처리하는 소상공인, 중소기업</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">✨ 기대 효과</h4>
+                                <p class="text-sm text-gray-600 mt-1">회계 업무 자동화, 정확한 세무 신고, 실시간 경영 현황 파악</p>
+                            </div>
+                             <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🔧 핵심 기능</h4>
+                                <p class="text-sm text-gray-600 mt-1">자동 증빙 수집, 간편 세무 신고, 재무 보고서 제공</p>
+                            </div>
+                        </div>
+                         <div class="mt-6 bg-teal-50 border-l-4 border-teal-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-gray-800">💡 <span class="font-bold">핵심 포인트:</span> 매번 영수증 챙기고 장부 정리할 필요 없이, 카드 매출과 세금계산서가 자동으로 정리되어 부가세 신고까지 간편하게 처리할 수 있습니다.</p>
+                        </div>
+                    </div>
+                    <!-- 관리형 무선랜 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="text-6xl text-center md:text-left">📡</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900">관리형 무선랜 (Managed Wi-Fi)</h3>
+                                <p class="mt-1 text-lg text-indigo-500 font-semibold">"빠르고 안정적인 매장 와이파이, 이제 KT가 알아서 관리해 드립니다!"</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid md:grid-cols-3 gap-6 text-center">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🎯 대상 고객</h4>
+                                <p class="text-sm text-gray-600 mt-1">안정적인 와이파이가 중요한 매장, 병원, 학원</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">✨ 기대 효과</h4>
+                                <p class="text-sm text-gray-600 mt-1">쾌적한 와이파이 환경, 장애 걱정 해소, 강력한 보안</p>
+                            </div>
+                             <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-gray-800">🔧 핵심 기능</h4>
+                                <p class="text-sm text-gray-600 mt-1">고품질 GiGA WiFi, 원격 통합 관리, 신속한 장애 대응</p>
+                            </div>
+                        </div>
+                         <div class="mt-6 bg-indigo-50 border-l-4 border-indigo-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-gray-800">💡 <span class="font-bold">핵심 포인트:</span> 많은 손님이 한꺼번에 접속해도 빠르고 안정적인 기가 와이파이를 제공합니다. 공유기 고장이나 설정 문제를 신경 쓸 필요 없이 KT가 관리해드립니다.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,7 +355,7 @@
         const personasData = [
             { emoji: '👨‍👩‍👧‍👦', title: '일반 가정', profile: '1~4인 가구. OTT 시청, 웹 서핑, 온라인 학습, 가벼운 게임이 주된 목적. 사용하는 PC는 1~2대.', recommendation: '🏠 가정용 인터넷', reason: '2대 PC 연결 제한이 문제 되지 않고, 모바일/TV 결합 시 가장 저렴합니다. 500Mbps(베이직) 상품이 쾌적한 환경을 제공합니다.', color: 'bg-blue-100' },
             { emoji: '🎬', title: '콘텐츠 크리에이터', profile: '유튜버, 스트리머, 디자이너. 고사양 PC 2대 이상 사용, 대용량 파일 업로드가 잦아 업로드 속도가 매우 중요함.', recommendation: '🏠 가정용(대칭형) or 🏢 오피스넷', reason: '비용이 중요하다면 대칭형(FTTH)이 보장되는 가정용 1Gbps 상품이 최적입니다. 단, PC 3대 이상 사용 또는 안정성이 더 중요하다면 오피스넷이 필수입니다.', color: 'bg-purple-100' },
-            { emoji: '☕', title: '소호(SOHO) 사업자', profile: '카페, 식당, 소매점 등. 카드결제기(POS), 고객용 WiFi, CCTV, 관리용 PC 등 2대 이상의 단말 연결이 필요함.', recommendation: '🏢 오피스넷', reason: '다양한 기기 연결과 안정적인 고객 와이파이 제공을 위해 PC 연결 제한이 없는 오피스넷이 필수입니다. ‘소호 성공팩’이 경제적일 수 있습니다.', color: 'bg-green-100' },
+            { emoji: '☕', title: '소호(SOHO) 사업자', profile: '카페, 식당, 소매점 등. 카드결제기(POS), 고객용 WiFi, CCTV, 관리용 PC 등 2대 이상의 단말 연결이 필요함.', recommendation: '🏢 오피스넷', reason: '다양한 기기 연결과 안정적인 고객 와이파이 제공을 위해 PC 연결 제한이 없는 오피스넷이 필수입니다. ‘성공팩’ 결합이 경제적일 수 있습니다.', color: 'bg-green-100' },
             { emoji: '💼', title: '중소기업 사무실', profile: '3~50명 근무. 전 직원 PC 사용, 네트워크 프린터, 파일 서버(NAS) 등 업무 연속성이 매우 중요.', recommendation: '🏢 오피스넷', reason: '3대 이상의 PC를 사용하므로 약관상 오피스넷이 유일한 선택지입니다. 인터넷 장애는 곧 업무 손실이므로 SLA 보증이 중요합니다.', color: 'bg-yellow-100' },
             { emoji: '🏥', title: '전문 분야 기업', profile: '병원, IT 기업, 설계사무소. 자체 서버, 원격접속(VPN), 대용량 데이터 전송 등 고정 IP가 필수적인 경우가 많음.', recommendation: '🏢 오피스넷 (고정 IP 포함)', reason: '고정 IP는 유동 IP 환경에서는 불가능한 핵심 비즈니스 운영을 가능하게 합니다. 안정성이 최우선이므로 GiGA Office 등 상위 서비스를 고려할 수 있습니다.', color: 'bg-red-100' }
         ];
@@ -269,6 +408,7 @@
 
         function populatePersonas() {
             const container = document.querySelector('#personas-content .grid');
+            if(!container) return;
             let personasHTML = '';
             personasData.forEach(persona => {
                 personasHTML += `<div class="persona-card bg-white border rounded-xl p-6 transition duration-300 hover:shadow-lg hover:border-blue-300 cursor-pointer"><div class="flex items-center space-x-4"><div class="text-4xl p-3 rounded-full ${persona.color}">${persona.emoji}</div><h3 class="text-xl font-bold text-gray-800">${persona.title}</h3></div><div class="mt-4"><p class="text-gray-600 mb-4">${persona.profile}</p><div class="bg-gray-100 p-4 rounded-lg"><p class="font-semibold text-gray-800">${persona.recommendation}</p><p class="text-sm text-gray-600 mt-1">${persona.reason}</p></div></div></div>`;
@@ -346,7 +486,7 @@
                     const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
                     const { product, summary, reasons } = parsedJson;
                     
-                    const isOffice = product === '오피스넷';
+                    const isOffice = product.includes('오피스넷');
                     const icon = isOffice ? '🏢' : '🏠';
                     const colorClass = isOffice ? 'text-green-600' : 'text-blue-600';
 
@@ -390,19 +530,22 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             populatePersonas();
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: priceData,
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        title: { display: true, text: '가정용 vs 오피스넷 월 요금 비교 (3년 약정)', font: { size: 18 } },
-                        tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += new Intl.NumberFormat('ko-KR').format(context.parsed.y) + '원'; } return label; } } }
-                    },
-                    scales: { y: { beginAtZero: true, ticks: { callback: function(value, index, ticks) { return new Intl.NumberFormat('ko-KR').format(value) + '원'; } } } }
-                }
-            });
+            const chartCanvas = document.getElementById('priceChart');
+            if (chartCanvas) {
+                const ctx = chartCanvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: priceData,
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: '가정용 vs 오피스넷 월 요금 비교 (3년 약정)', font: { size: 18 } },
+                            tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += new Intl.NumberFormat('ko-KR').format(context.parsed.y) + '원'; } return label; } } }
+                        },
+                        scales: { y: { beginAtZero: true, ticks: { callback: function(value, index, ticks) { return new Intl.NumberFormat('ko-KR').format(value) + '원'; } } } }
+                    }
+                });
+            }
             document.querySelectorAll('.accordion-header').forEach(button => {
                 button.addEventListener('click', () => {
                     const accordionContent = button.nextElementSibling;
